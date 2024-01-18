@@ -6,6 +6,9 @@ services:
                 condition: service_healthy
         ports:
             - "80:80"
+        volumes:
+            - courses_data:/var/www/html/courses
+            - video_data:/var/www/html/video
     db:   # The location of the database
         image: mariadb:10.11
         environment:
@@ -28,4 +31,6 @@ services:
             start_period: 10s
 
 volumes:
+    courses_data:
+    video_data:
     db_data:
