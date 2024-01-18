@@ -1,0 +1,31 @@
+services:
+    eclass:
+        image: ghcr.io/gunet/eclass
+        depends_on:
+            db:
+                condition: service_healthy
+        ports:
+            - "80:80"
+    db:   # The location of the database
+        image: mariadb:10.11
+        environment:
+            - MYSQL_ROOT_PASSWORD=secret
+            - MYSQL_DATABASE=eclass
+            - MYSQL_USER=eclass
+            - MYSQL_PASSWORD=eclass
+        command:
+        - --innodb-buffer-pool-size=120M
+        - --innodb_flush_log_at_trx_commit=2
+        - --wait-timeout=86400
+        - --max_allowed_packet=67108864
+        volumes:
+            - db_data:/var/lib/mysql
+        healthcheck:
+            test: mysql --user=root --password=$$MYSQL_ROOT_PASSWORD -e 'show databases;' | grep -q $$MYSQL_DATABASE || exit 1
+            interval: 10s
+            timeout: 3s
+            retries: 10
+            start_period: 10s
+
+volumes:
+    db_data:
