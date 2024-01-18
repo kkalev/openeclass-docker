@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM php:8.1-apache
 
 LABEL gr.gunet.e-class-docker.maintainer="eclass@gunet.gr"
@@ -11,7 +12,6 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     libsasl2-dev \
     curl \
     git \
-    wget \
     libfreetype6-dev \
     libicu-dev \
     libjpeg-dev \
@@ -29,26 +29,36 @@ RUN docker-php-ext-install iconv intl mysqli opcache pdo_mysql pdo_pgsql zip gd 
 RUN a2disconf charset localized-error-pages serve-cgi-bin && \
     a2dismod -f access_compat autoindex deflate negotiation status
 
-ARG mversion=3.14
-ARG version=3.14.1
+COPY php/ ${PHP_INI_DIR}/
+
+
+ARG REPO=https://github.com/gunet/openeclass.git
+ARG VERSION=3.14.1
 ARG INSTALL=/var/www/html
 
-RUN cd /var/tmp && \
-    wget -q https://download.openeclass.org/files/${mversion}/openeclass-${version}.tar.gz && \
-    tar xf /var/tmp/openeclass-${version}.tar.gz -C ${INSTALL} && \
-    mv ${INSTALL}/openeclass-${version}/* ${INSTALL} && \
-    rm -rf ${INSTALL}/openeclass-${version} && \
-    rm /var/tmp/openeclass-${version}.tar.gz
+ADD --chown=www-data:www-data ${REPO}#Release_${VERSION} ${INSTALL}
+
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+USER www-data
+RUN cd /var/www/html && \
+    COMPOSER_CACHE_DIR=/var/www/html/.cache composer update && \
+    COMPOSER_CACHE_DIR=/var/www/html/.cache composer install && \
+    rm -rf /var/www/html/.cache
 
 RUN mkdir ${INSTALL}/courses && \
-    mkdir ${INSTALL}/video && \
-    chown -R www-data:www-data ${INSTALL}/
+    mkdir ${INSTALL}/video
+    # chown -R www-data:www-data ${INSTALL}/
+USER root
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
     CMD pgrep -u www-data -c apache2
+
+
+WORKDIR ${INSTALL}
 
 ENV TZ=Europe/Athens
 ENV MYSQL_LOCATION=db
 # DB user root
 ENV MYSQL_ROOT_PASSWORD=secret
 # DB database is eclass
+ENV PHP_MAX_UPLOAD=256M
