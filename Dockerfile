@@ -44,4 +44,7 @@ RUN mkdir ${INSTALL}/courses && \
     mkdir ${INSTALL}/video && \
     chown -R www-data:www-data ${INSTALL}/
 
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+    CMD pgrep -u www-data -c apache2
+
 ENV TZ=Europe/Athens
