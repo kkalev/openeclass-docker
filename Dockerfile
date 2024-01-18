@@ -48,3 +48,7 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
     CMD pgrep -u www-data -c apache2
 
 ENV TZ=Europe/Athens
+ENV MYSQL_LOCATION=db
+# DB user root
+ENV MYSQL_ROOT_PASSWORD=secret
+# DB database is eclass

@@ -9,13 +9,14 @@ services:
         volumes:
             - courses_data:/var/www/html/courses
             - video_data:/var/www/html/video
+        environment:
+            - MYSQL_LOCATION=db
+            - MYSQL_ROOT_PASSWORD=secret
     db:   # The location of the database
         image: mariadb:10.11
         environment:
             - MYSQL_ROOT_PASSWORD=secret
             - MYSQL_DATABASE=eclass
-            - MYSQL_USER=eclass
-            - MYSQL_PASSWORD=eclass
         command:
         - --innodb-buffer-pool-size=120M
         - --innodb_flush_log_at_trx_commit=2
